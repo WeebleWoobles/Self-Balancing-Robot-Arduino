@@ -1,13 +1,13 @@
-# Prerequisites
+# Prerequisites and Dependency Files
 *.d
 
-# Object files
+# Object Files
 *.o
 *.ko
 *.obj
 *.elf
 
-# Linker output
+# Linker Output
 *.ilk
 *.map
 *.exp
@@ -16,19 +16,19 @@
 *.gch
 *.pch
 
-# Libraries
+# Library Files
 *.lib
 *.a
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# Shared Objects (Includes Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
 
-# Executables
+# Executable Files
 *.exe
 *.out
 *.app
@@ -36,13 +36,13 @@
 *.x86_64
 *.hex
 
-# Debug files
+# Debugging Files
 *.dSYM/
 *.su
 *.idb
 *.pdb
 
-# Kernel Module Compile Results
+# Kernel Module Compilation Results
 *.mod*
 *.cmd
 .tmp_versions/
@@ -50,3 +50,45 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Arduino IDE Build Artifacts
+*.bin
+*.hex
+*.eep
+*.lst
+*.map
+*.sym
+*.elf
+
+# Ignore Compilation Artifacts
+build/
+*.o
+*.d
+
+# Ignore Generated Libraries & Metadata
+libraries/
+*.a
+*.so
+
+# Dependency Tracking Files
+*.dep
+*.dcu
+*.pdp
+*.pds
+
+# Arduino Sketch Backup Files
+*.bak
+
+# Temporary & System Files
+*~
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# CMake Cache and Build Artifacts
+CMakeCache.txt
+CMakeFiles/
+Makefile
