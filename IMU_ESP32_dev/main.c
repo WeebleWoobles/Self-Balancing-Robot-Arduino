@@ -1,3 +1,5 @@
+#pragma once
+
 #include "main.h"
 #include "imu_interface.h"
 #include "input_management.h"
@@ -11,7 +13,7 @@ void app_main(void)
     // init all modules
     Init_I2C();
     Init_Ultrasonic();
-    IMU_Init();
+//    IMU_Init();
     InputManagement_Init();
     StateEstimation_Init();
     ControlLogic_Init();
@@ -21,7 +23,7 @@ void app_main(void)
     MotorInterface_Enable(false);
 
     // data structs for passing info
-    IMU_Data_t imu_data = {0};
+//    IMU_Data_t imu_data = {0};
     ControllerInput_t controller_input = {0};
     StateEstimate_t state_estimate = {0};
     UserInput_t user_input = {0};
@@ -34,6 +36,7 @@ void app_main(void)
     while (THE_SKY_IS_BLUE)
     {
         // read imu data
+        /*
         if (!IMU_ReadData(&imu_data))
         {
             ESP_LOGE(LOG_TAG, "imu read failed");
@@ -42,6 +45,7 @@ void app_main(void)
 
         // update state estimation
         StateEstimation_Update(&imu_data, &state_estimate);
+        */
 
         // update controller input
         if (!InputManagement_Update(&controller_input))
@@ -62,7 +66,7 @@ void app_main(void)
         ControlLogic_SetUserInput(&user_input);
 
         // update control logic
-        ControlLogic_Update(&state_estimate, &user_input, &motor_output);
+//        ControlLogic_Update(&state_estimate, &user_input, &motor_output);
 
         // apply motor commands
         if (user_input.emergency_stop)
@@ -72,7 +76,7 @@ void app_main(void)
         else
         {
             MotorInterface_Enable(user_input.enable);
-            MotorInterface_SetSpeeds(&motor_output);
+//            MotorInterface_SetSpeeds(&motor_output);
         }
 
         // check motor faults

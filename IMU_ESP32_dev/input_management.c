@@ -1,3 +1,5 @@
+#pragma once
+
 #include "input_management.h"
 #include <stdio.h>
 

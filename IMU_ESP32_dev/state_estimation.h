@@ -39,7 +39,7 @@ void StateEstimation_Init(void);
  * @param[in] imu_data Pointer to the latest IMU data.
  * @param[out] state Pointer to the state estimate structure to update.
  */
-void StateEstimation_Update(const IMU_Data_t* imu_data, StateEstimate_t* state);
+//void StateEstimation_Update(const IMU_Data_t* imu_data, StateEstimate_t* state);
 
 /**
  * @brief Reset the state estimator (e.g., after a fault or reset event).

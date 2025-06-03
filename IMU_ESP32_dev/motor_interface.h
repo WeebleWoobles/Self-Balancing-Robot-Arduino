@@ -8,7 +8,7 @@
 // this lil module takes care of the robot motors
 // it talks to the motor driver hardware and sets speeds and directions
 // gets commands from control logic and turns them into motor signals
-// also keeps an eye on motor status and deals with any oopsies
+// also keeps an eye on motor status and deals with any oopsies 
 
 // motor interface params
 #define MOTOR_MAX_SPEED        255     // max pwm value for motor speed
@@ -17,18 +17,18 @@
 
 // motor status structure
 typedef struct {
-    float speed_left      // current speed of left motor
-    float speed_right     // current speed of right motor
-    bool fault_left       // fault status for left motor
-    bool fault_right      // fault status for right motor
-    bool enabled          // motors on or off
+    float speed_left;      // current speed of left motor
+    float speed_right;     // current speed of right motor
+    bool fault_left;       // fault status for left motor
+    bool fault_right;      // fault status for right motor
+    bool enabled;          // motors on or off
 } MotorStatus_t;
 
 // control output structure
-typedef struct {
-    float left_speed      // speed for left motor (0.0 to 1.0)
-    float right_speed     // speed for right motor (0.0 to 1.0)
-} ControlOutput_t;
+// typedef struct {
+//     float left_speed;      // speed for left motor (0.0 to 1.0)
+//     float right_speed;     // speed for right motor (0.0 to 1.0)
+// } ControlOutput_t;
 
 // function declarations
 
@@ -43,7 +43,7 @@ void MotorInterface_Init(void);
  * takes the control output and makes the motors move
  * @param[in] output pointer to control output struct
  */
-void MotorInterface_SetSpeeds(const ControlOutput_t* output);
+//void MotorInterface_SetSpeeds(const ControlOutput_t* output);
 
 /**
  * @brief turns motors on or off

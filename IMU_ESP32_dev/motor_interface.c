@@ -1,3 +1,5 @@
+#pragma once
+
 #include "motor_interface.h"
 #include <stdio.h> 
 
@@ -58,22 +60,22 @@ void MotorInterface_Init(void) {
  * @brief motor speeds based on our control output
  * @param[in] output pointer to ControlOutput_t struct
  */
-void MotorInterface_SetSpeeds(const ControlOutput_t* output) {
-    if (!is_initialized || !current_status.enabled || output == NULL) {
-        return;
-    }
+// void MotorInterface_SetSpeeds(const ControlOutput_t* output) {
+//     if (!is_initialized || !current_status.enabled || output == NULL) {
+//         return;
+//     }
 
-    // apply speeds from control output assuming normalized 0.0 to 1.0
-    float left_speed = output->left_speed * MOTOR_MAX_SPEED;
-    float right_speed = output->right_speed * MOTOR_MAX_SPEED;
+//     // apply speeds from control output assuming normalized 0.0 to 1.0
+//     float left_speed = output->left_speed * MOTOR_MAX_SPEED;
+//     float right_speed = output->right_speed * MOTOR_MAX_SPEED;
 
-    mock_set_motor_speed(0, left_speed);  // left motor
-    mock_set_motor_speed(1, right_speed); // rite motor
+//     mock_set_motor_speed(0, left_speed);  // left motor
+//     mock_set_motor_speed(1, right_speed); // rite motor
 
-    // check for faults after setting speeds
-    mock_check_fault(0);
-    mock_check_fault(1);
-}
+//     // check for faults after setting speeds
+//     mock_check_fault(0);
+//     mock_check_fault(1);
+// }
 
 /**
  * @brief motor enable/disable
@@ -198,8 +200,8 @@ uint32_t MotorInterface_GetPWMFrequency(void) {
  * @param[in] deceleration deceleration rate units per second
  */
 void MotorInterface_SetAcceleration(float acceleration, float deceleration) {
-    if (acceleration >= 0.0f) this->acceleration = acceleration;
-    if (deceleration >= 0.0f) this->deceleration = deceleration;
+//    if (acceleration >= 0.0f) this->acceleration = acceleration;
+//    if (deceleration >= 0.0f) this->deceleration = deceleration;
 }
 
 /**
@@ -208,8 +210,8 @@ void MotorInterface_SetAcceleration(float acceleration, float deceleration) {
  * @param[out] deceleration pointer to store deceleration rate
  */
 void MotorInterface_GetAcceleration(float* acceleration, float* deceleration) {
-    if (acceleration != NULL) *acceleration = this->acceleration;
-    if (deceleration != NULL) *deceleration = this->deceleration;
+//    if (acceleration != NULL) *acceleration = this->acceleration;
+//    if (deceleration != NULL) *deceleration = this->deceleration;
 }
 
 /**
