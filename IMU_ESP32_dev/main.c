@@ -1,183 +1,119 @@
-#pragma once
-
+#include "init.h"
 #include "main.h"
-#include "imu_interface.h"
-#include "input_management.h"
-#include "state_estimation.h"
-#include "control_logic.h"
-#include "motor_interface.h"
+// RTOS TASKS
 
-// main app entry point
-void app_main(void)
-{
-    // init all modules
-    Init_I2C();
-    Init_Ultrasonic();
-//    IMU_Init();
-    InputManagement_Init();
-    StateEstimation_Init();
-    ControlLogic_Init();
-    MotorInterface_Init();
+#include "driver/i2c.h"
+#include <stdio.h>
 
-    // make sure motors are off at start
-    MotorInterface_Enable(false);
-
-    // data structs for passing info
-//    IMU_Data_t imu_data = {0};
-    ControllerInput_t controller_input = {0};
-    StateEstimate_t state_estimate = {0};
-    UserInput_t user_input = {0};
-    ControlOutput_t motor_output = {0};
-
-    // log startup
-    ESP_LOGI(LOG_TAG, "system started");
-
-    // main loop
-    while (THE_SKY_IS_BLUE)
-    {
-        // read imu data
-        /*
-        if (!IMU_ReadData(&imu_data))
-        {
-            ESP_LOGE(LOG_TAG, "imu read failed");
-            continue;
-        }
-
-        // update state estimation
-        StateEstimation_Update(&imu_data, &state_estimate);
-        */
-
-        // update controller input
-        if (!InputManagement_Update(&controller_input))
-        {
-            ESP_LOGW(LOG_TAG, "controller disconnected");
-            user_input.enable = false;
-            user_input.emergency_stop = true;
-        }
-        else
-        {
-            user_input.forward = controller_input.joysticks.left_y;
-            user_input.turn = controller_input.joysticks.right_x;
-            user_input.enable = true;
-            user_input.emergency_stop = InputManagement_IsButtonPressed(&controller_input, BUTTON_B);
-        }
-
-        // set user input for control logic
-        ControlLogic_SetUserInput(&user_input);
-
-        // update control logic
-//        ControlLogic_Update(&state_estimate, &user_input, &motor_output);
-
-        // apply motor commands
-        if (user_input.emergency_stop)
-        {
-            MotorInterface_Enable(false);
-        }
-        else
-        {
-            MotorInterface_Enable(user_input.enable);
-//            MotorInterface_SetSpeeds(&motor_output);
-        }
-
-        // check motor faults
-        if (MotorInterface_HasFault())
-        {
-            ESP_LOGE(LOG_TAG, "motor fault detected");
-            MotorInterface_Enable(false);
-            MotorInterface_SetFaultReset(true);
-        }
-
-        // read ultrasonic distances
-        float left_dist = Read_Ultrasonic_Distance(L_ULTRA_TRIG, L_ULTRA_ECHO);
-        float right_dist = Read_Ultrasonic_Distance(R_ULTRA_TRIG, R_ULTRA_ECHO);
-        if (left_dist < 0.3f || right_dist < 0.3f) // 30cm threshold
-        {
-            ESP_LOGW(LOG_TAG, "obstacle detected - left: %.2f m, right: %.2f m", left_dist, right_dist);
-            user_input.emergency_stop = true;
-        }
-
-        // delay to maintain loop timing
-        vTaskDelay(pdMS_TO_TICKS(CONTROL_LOOP_PERIOD_MS));
-    }
-}
-
-/* *** INITIALIZE FUNCTIONS DEFINITIONS START *** */
-
-// sets up i2c protocol
-void Init_I2C(void)
-{
+void scan_i2c(void) {
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = I2C_MASTER_SDA_IO,
         .scl_io_num = I2C_MASTER_SCL_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ
+        .master.clk_speed = 100000
     };
     i2c_param_config(I2C_NUM_0, &conf);
     i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0);
-    ESP_LOGI(LOG_TAG, "i2c initialized");
-}
 
-// sets up ultrasonic sensors
-void Init_Ultrasonic(void)
-{
-    gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << L_ULTRA_TRIG) | (1ULL << R_ULTRA_TRIG),
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE
-    };
-    gpio_config(&io_conf);
-
-    io_conf.pin_bit_mask = (1ULL << L_ULTRA_ECHO) | (1ULL << R_ULTRA_ECHO);
-    io_conf.mode = GPIO_MODE_INPUT;
-    gpio_config(&io_conf);
-
-    ESP_LOGI(LOG_TAG, "ultrasonic sensors initialized");
-}
-
-/* *** ULTRASONIC SENSOR FUNCTIONS START *** */
-
-// reads distance from ultrasonic sensor in meters
-float Read_Ultrasonic_Distance(gpio_num_t trig_pin, gpio_num_t echo_pin)
-{
-    // send trigger pulse
-    gpio_set_level(trig_pin, 0);
-    ets_delay_us(2);
-    gpio_set_level(trig_pin, 1);
-    ets_delay_us(ULTRA_TRIG_PULSE_US);
-    gpio_set_level(trig_pin, 0);
-
-    // wait for echo
-    uint32_t start_time = esp_timer_get_time();
-    while (gpio_get_level(echo_pin) == 0)
-    {
-        if (esp_timer_get_time() - start_time > ULTRA_TIMEOUT_US)
-        {
-            ESP_LOGE(LOG_TAG, "ultrasonic echo timeout");
-            return -1.0f;
+    printf("Scanning I2C bus...\n");
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, true);
+        i2c_master_stop(cmd);
+        esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(50));
+        i2c_cmd_link_delete(cmd);
+        if (ret == ESP_OK) {
+            printf("Found device at 0x%02X\n", addr);
         }
     }
-
-    // measure echo duration
-    start_time = esp_timer_get_time();
-    while (gpio_get_level(echo_pin) == 1)
-    {
-        if (esp_timer_get_time() - start_time > ULTRA_TIMEOUT_US)
-        {
-            ESP_LOGE(LOG_TAG, "ultrasonic echo timeout");
-            return -1.0f;
-        }
-    }
-    uint32_t duration = esp_timer_get_time() - start_time;
-
-    // calculate distance (duration in us, speed in m/s)
-    float distance = (duration * ULTRA_SPEED_SOUND_M_S) / (2 * 1000000);
-    return distance;
 }
 
-/* *** ULTRASONIC SENSOR FUNCTIONS END *** */
+void app_main() {
 
-/* *** INITIALIZE FUNCTIONS DEFINITIONS END *** */
+    init_main();
+
+    uint8_t raw[14] = {0};
+    bool ok = IMU_ReadBytes(0x3B, raw, 14);
+    if (!ok) {
+    printf("Failed to read IMU data\n");
+    } else {
+    printf("Raw Accel/Gyro: ");
+    for (int i = 0; i < 14; i++) {
+        printf("%02X ", raw[i]);
+    }
+    printf("\n");
+}
+
+    // Setpoint is initialized to 0, but is a pointer because bluetooth with edit this. 
+    float setpoint = -2.0f;
+    float* setpter = &setpoint;
+
+
+    //MOTOR TEST:
+    // while(1){
+    //     //RUN MOTORS FORWARD 5s
+    //     // MOTOR_set_speed(255);
+    //     // printf("Motor Forward\n");
+    //     // vTaskDelay(pdMS_TO_TICKS(5000));
+    //     // //RUN MOTORS Backwards 5s
+    //     // MOTOR_set_speed(-255);
+    //     // printf("motor backward\n");
+    //     // vTaskDelay(pdMS_TO_TICKS(5000));
+
+    //     MOTOR_set_speed(1);
+    //     printf("Motor Forward\n");
+    //     vTaskDelay(pdMS_TO_TICKS(5000));
+    //     //RUN MOTORS Backwards 5s
+    //     MOTOR_set_speed(-1);
+    //     printf("motor backward\n");
+    //     vTaskDelay(pdMS_TO_TICKS(5000));
+    // }
+
+
+    //TEST RTOS AND PID CONTROLLING MOTORS
+    xTaskCreate(print_values, "Print Values Task", 2048, NULL, 5, NULL);
+    xTaskCreate(main_control,"PID Test task", 4096, setpter, 5, NULL);
+    xTaskCreate(led_task,"LED task", 1024, NULL, 5, NULL);
+}
+
+void led_task(void* pvParameters){
+    while (1) {
+        gpio_set_level(LED_PIN, 0);  // LED ON (active-low)
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        gpio_set_level(LED_PIN, 1);  // LED OFF
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+float pitch = 0;
+double output = 0;
+
+void print_values(void* pvParameters){
+    while(1){
+        printf("Pitch = %f, PID output = %f\n", pitch, output);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+void main_control(void* pvParameters) {
+    int control_time = 1; 
+    double dt_in_s = control_time / 1000;
+    while(1){
+        //Step 0: get duration of time from last check
+        
+        //Step 1: get pitch datafrom IMU and PID
+        pitch = PID_get_pitch(pitch ,dt_in_s);
+        //Pitch will average out, Need perfect level surface to really calibrate
+        
+        //Step 2: Get output for motor
+        output = PID_correction_output(pitch,  dt_in_s, pvParameters);
+
+        //Step 3: Insert it into motor
+        MOTOR_set_speed(-output);
+
+        vTaskDelay(pdMS_TO_TICKS(control_time));
+    }
+}
