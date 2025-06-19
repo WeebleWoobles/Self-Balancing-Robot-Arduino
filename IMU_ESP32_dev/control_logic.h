@@ -19,7 +19,7 @@
 #define CONTROL_DT                0.10f   // control loop time step (seconds, 100 hz)
 #define PID_DEFAULT_KP            44.138f   // default proportional gain
 #define PID_DEFAULT_KI            111.695f    // default integral gain
-#define PID_DEFAULT_KD            1.0f    // default derivative gain
+#define PID_DEFAULT_KD            4.36f    // default derivative gain
 #define PID_OUTPUT_LIMIT          255.0f  // max duty cycle output
 
 // user input structure
